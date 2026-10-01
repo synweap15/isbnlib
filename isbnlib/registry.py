@@ -3,7 +3,7 @@
 
 import logging
 
-from pkg_resources import iter_entry_points
+from importlib.metadata import entry_points
 
 from . import NotValidDefaultFormatterError, NotValidDefaultServiceError
 from . import _goob as goob
@@ -85,7 +85,7 @@ def load_plugins():  # pragma: no cover
     # get metadata plugins from entry_points
     if options.get('LOAD_METADATA_PLUGINS', True):
         try:
-            for entry in iter_entry_points(group='isbnlib.metadata'):
+            for entry in entry_points(group='isbnlib.metadata'):
                 add_service(entry.name, entry.load())
         except Exception:
             LOGGER.critical('Some metadata plugins were not loaded!')
@@ -96,7 +96,7 @@ def load_plugins():  # pragma: no cover
     # get formatters from entry_points
     if options.get('LOAD_FORMATTER_PLUGINS', True):
         try:
-            for entry in iter_entry_points(group='isbnlib.formatters'):
+            for entry in entry_points(group='isbnlib.formatters'):
                 add_bibformatter(entry.name, entry.load())
         except Exception:
             LOGGER.critical('Some formatters plugins were not loaded!')

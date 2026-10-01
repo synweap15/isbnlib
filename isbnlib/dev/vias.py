@@ -52,6 +52,19 @@ def parallel(named_tasks, arg):
     return results
 
 
+def _process_worker(name, task, arg, q):
+    try:  # pragma: no cover
+        q.put((name, task(arg)))
+    except Exception:  # pragma: no cover
+        LOGGER.debug(
+            "No result in 'multi' for %s[%s](%s)",
+            task,
+            name,
+            arg,
+        )
+        q.put((name, None))
+
+
 # pylint: disable=broad-except
 def multi(named_tasks, arg):
     """Use several cores (if available)."""
@@ -60,20 +73,8 @@ def multi(named_tasks, arg):
     results = {}
     q = Queue()
 
-    def _worker(name, task, arg, q):
-        try:  # pragma: no cover
-            q.put((name, task(arg)))
-        except Exception:  # pragma: no cover
-            LOGGER.debug(
-                "No result in 'multi' for %s[%s](%s)",
-                task,
-                name,
-                arg,
-            )
-            q.put((name, None))
-
     for name, task in named_tasks:
-        p = Process(target=_worker, args=(name, task, arg, q))
+        p = Process(target=_process_worker, args=(name, task, arg, q))
         p.start()
         p.join(options.get('THREADS_TIMEOUT'))
     q.put('STOP')
